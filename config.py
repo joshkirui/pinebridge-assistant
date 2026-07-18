@@ -149,7 +149,7 @@ KNOWN_APPS = {
     "whatsapp web": "https://web.whatsapp.com",
     "telegram": "https://web.telegram.org",
     "telegram web": "https://web.telegram.org",
-    "tradingview": "https://www.tradingview.com",
+    "tradingview": r"shell:AppsFolder\TradingView.Desktop_n534cwy3pjxzj!App",
     "github": "https://github.com",
     "reddit": "https://reddit.com",
     "amazon": "https://amazon.com",
