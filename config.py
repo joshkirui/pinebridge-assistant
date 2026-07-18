@@ -88,7 +88,7 @@ KNOWN_APPS = {
     "vlc media player": r"C:\Program Files\VideoLAN\VLC\vlc.exe",
 
     # Communication
-    "discord": r"C:\Users\joshk\AppData\Local\Discord\Update.exe --processStart Discord.exe",
+    "discord": r"C:\Users\joshk\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Discord Inc\Discord.lnk",
     "teams": "ms-teams",
     "microsoft teams": "ms-teams",
     "zoom": r"C:\Program Files\Zoom\bin\Zoom.exe",

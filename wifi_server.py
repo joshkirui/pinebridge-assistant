@@ -324,22 +324,25 @@ HTML_TEMPLATE = """
 
         function workMode() {
             addLog('Work Mode activated', 'user');
-            socket.emit('command', {command: 'work mode greeting'});
+            socket.emit('command', {command: 'close all'});
             setTimeout(() => {
-                socket.emit('command', {command: 'what time is it'});
+                socket.emit('command', {command: 'work mode greeting'});
             }, 1500);
             setTimeout(() => {
+                socket.emit('command', {command: 'what time is it'});
+            }, 3000);
+            setTimeout(() => {
                 socket.emit('command', {command: 'open tradingview'});
-            }, 3500);
-            setTimeout(() => {
-                socket.emit('command', {command: 'open discord'});
-            }, 4500);
-            setTimeout(() => {
-                socket.emit('command', {command: 'open unigram'});
             }, 5000);
             setTimeout(() => {
-                socket.emit('command', {command: 'work mode music'});
+                socket.emit('command', {command: 'open discord'});
             }, 6000);
+            setTimeout(() => {
+                socket.emit('command', {command: 'open unigram'});
+            }, 7000);
+            setTimeout(() => {
+                socket.emit('command', {command: 'work mode music'});
+            }, 8000);
         }
 
         let isMuted = false;
