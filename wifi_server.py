@@ -165,6 +165,14 @@ HTML_TEMPLATE = """
             cursor: pointer;
         }
         .quick-cmd:active { background: rgba(0, 210, 255, 0.3); }
+        .work-mode {
+            background: linear-gradient(145deg, #3a7bd5, #00d2ff) !important;
+            border: none !important;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 12px 25px;
+        }
+        .work-mode:active { transform: scale(0.95); }
         .section-label {
             font-size: 12px;
             color: #666;
@@ -258,6 +266,11 @@ HTML_TEMPLATE = """
         <div class="quick-cmd" onclick="sendCmd('lock')">Lock</div>
     </div>
     
+    <div class="section-label">Modes</div>
+    <div class="quick-cmds">
+        <div class="quick-cmd work-mode" onclick="workMode()">Work Mode</div>
+    </div>
+    
     <div class="commands">
         <input type="text" class="cmd-input" id="cmdInput" placeholder="Type a command..." 
                onkeypress="if(event.key==='Enter')sendTextCmd()">
@@ -307,6 +320,17 @@ HTML_TEMPLATE = """
                 sendCmd(cmd);
                 cmdInput.value = '';
             }
+        }
+
+        function workMode() {
+            addLog('Work Mode activated', 'user');
+            socket.emit('command', {command: 'what time is it'});
+            setTimeout(() => {
+                socket.emit('command', {command: 'open tradingview'});
+            }, 2000);
+            setTimeout(() => {
+                socket.emit('command', {command: 'open https://www.youtube.com/watch?v=3D8O3bfOEZs&list=RD3D8O3bfOEZs&start_radio=1&t=2830s'});
+            }, 4000);
         }
 
         let isMuted = false;
