@@ -22,17 +22,24 @@ class Processor:
     def _init_ai(self):
         backend = AI_BACKEND.lower()
 
-        # Try Ollama first (free, local)
+        # Try Ollama first (free, local) — quick check with 3s timeout
         try:
             import openai
+            import httpx
             test_client = openai.OpenAI(
                 api_key="ollama",
                 base_url=OLLAMA_BASE_URL,
+                timeout=httpx.Timeout(3.0, connect=2.0),
             )
-            test_client.models.list()
-            self._client = test_client
-            self._model = OLLAMA_MODEL
-            print(f"\033[92m[AI]\033[0m Ollama connected ({OLLAMA_MODEL})")
+            models = test_client.models.list()
+            model_names = [m.id for m in models.data]
+            if not model_names:
+                print(f"\033[93m[AI]\033[0m Ollama running but no models installed")
+            else:
+                # Use first available model
+                self._model = model_names[0] if model_names else OLLAMA_MODEL
+                self._client = test_client
+                print(f"\033[92m[AI]\033[0m Ollama connected ({self._model})")
         except Exception as e:
             print(f"\033[93m[AI]\033[0m Ollama not available: {e}")
 
@@ -230,10 +237,8 @@ If the command is a greeting or chat, return: {"module": "general", "action": "c
             except Exception as e:
                 err_str = str(e)
                 if "402" in err_str or "insufficient" in err_str.lower():
-                    print(f"\033[93m[AI]\033[0m API balance depleted")
-                    if client is self._client:
-                        self._client = self._fallback_client
-                        self._model = self._fallback_model
+                    print(f"\033[93m[AI]\033[0m API balance depleted - AI disabled")
+                    self._ai_disabled = True
                 else:
                     print(f"\033[91m[AI Error]\033[0m {e}")
                 continue
