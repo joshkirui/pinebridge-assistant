@@ -9,7 +9,7 @@ from commands.files import open_file, list_files, create_folder, create_file, de
 from commands.media import next_track, previous_track, play_pause, increase_brightness, decrease_brightness
 from commands.general import (
     get_time, get_date, get_day, calculate, get_system_info,
-    open_cmd, open_powershell, open_explorer, work_mode
+    open_cmd, open_powershell, open_explorer, work_mode_music
 )
 
 
@@ -69,7 +69,7 @@ MODULE_MAP = {
         "open_cmd": lambda **kwargs: open_cmd(),
         "open_powershell": lambda **kwargs: open_powershell(),
         "open_explorer": lambda path=None, **kwargs: open_explorer(path),
-        "work_mode": lambda **kwargs: work_mode(),
+        "work_mode_music": lambda **kwargs: work_mode_music(),
         "chat": lambda text="", **kwargs: (True, text),
     },
 }

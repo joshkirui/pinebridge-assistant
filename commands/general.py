@@ -3,6 +3,7 @@ import math
 import subprocess
 import os
 import time
+import threading
 
 WORK_MODE_FILE = r"C:\Users\joshk\Music\8 HOUR R&B MIX 2025 _ SZA Summer Walker Leon Thomas + _ Modern & Throwbacks _ R&B Playlist.m4a"
 
@@ -122,32 +123,16 @@ def open_explorer(path=None):
         return False, f"Failed to open File Explorer: {e}"
 
 
-def work_mode():
+def _move_to_second_screen():
+    time.sleep(3)
+    ps = 'Add-Type -TypeDefinition "using System; using System.Runtime.InteropServices; public class W { [DllImport(\\"user32.dll\\")] public static extern bool SetWindowPos(IntPtr h,IntPtr a,int x,int y,int cx,int cy,uint f); [DllImport(\\"user32.dll\\")] public static extern IntPtr GetForegroundWindow(); }"; $h=[W]::GetForegroundWindow(); if($h){[W]::SetWindowPos($h,[IntPtr]::Zero,1920,100,1280,720,64)}'
+    subprocess.Popen(["powershell", "-Command", ps], creationflags=subprocess.CREATE_NO_WINDOW)
+
+
+def work_mode_music():
     try:
-        ps_script = f'''
-Start-Process "{WORK_MODE_FILE}"
-Start-Sleep -Seconds 3
-
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public class MoveWindow {{
-    [DllImport("user32.dll")]
-    public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-    [DllImport("user32.dll")]
-    public static extern IntPtr GetForegroundWindow();
-}}
-"@
-
-$hwnd = [MoveWindow]::GetForegroundWindow()
-if ($hwnd -ne [IntPtr]::Zero) {{
-    [MoveWindow]::SetWindowPos($hwnd, [IntPtr]::Zero, 1920, 100, 1280, 720, 0x0040)
-}}
-'''
-        subprocess.Popen(
-            ["powershell", "-Command", ps_script],
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
-        return True, "Hi Lerito, let's cook!"
+        os.startfile(WORK_MODE_FILE)
+        threading.Thread(target=_move_to_second_screen, daemon=True).start()
+        return True, "Playing R&B mix on second screen."
     except Exception as e:
-        return False, f"Work mode failed: {e}"
+        return False, f"Failed: {e}"

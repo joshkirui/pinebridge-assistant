@@ -324,13 +324,16 @@ HTML_TEMPLATE = """
 
         function workMode() {
             addLog('Work Mode activated', 'user');
-            socket.emit('command', {command: 'work mode'});
+            socket.emit('command', {command: 'work mode greeting'});
             setTimeout(() => {
                 socket.emit('command', {command: 'what time is it'});
             }, 1500);
             setTimeout(() => {
                 socket.emit('command', {command: 'open tradingview'});
             }, 3500);
+            setTimeout(() => {
+                socket.emit('command', {command: 'work mode music'});
+            }, 5500);
         }
 
         let isMuted = false;
