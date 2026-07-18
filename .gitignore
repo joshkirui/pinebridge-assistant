@@ -1,0 +1,13 @@
+.env
+*.pyc
+__pycache__/
+certs/
+*.pem
+.vscode/
+.idea/
+env.bat
+login_gh.ps1
+certs/
+*.pem
+__pycache__/
+*.pyc
