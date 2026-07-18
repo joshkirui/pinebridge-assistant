@@ -145,7 +145,7 @@ def close_all():
         "Spotify.exe", "vlc.exe", "Discord.exe",
         "Teams.exe", "Zoom.exe", "slack.exe",
         "WINWORD.EXE", "EXCEL.EXE", "POWERPNT.EXE",
-        "Code.exe", "Cursor.exe",
+        "Code.exe", "Cursor.exe", "Telegram.exe",
     ]
     closed = []
     for app in apps_to_close:
