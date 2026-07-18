@@ -324,13 +324,10 @@ HTML_TEMPLATE = """
 
         function workMode() {
             addLog('Work Mode activated', 'user');
-            socket.emit('command', {command: 'what time is it'});
+            socket.emit('command', {command: 'work mode'});
             setTimeout(() => {
-                socket.emit('command', {command: 'open tradingview'});
+                socket.emit('command', {command: 'open https://www.youtube.com/watch?v=3D8O3bfOEZs&list=RD3D8O3bfOEZs&start_radio=1&t=4031s'});
             }, 2000);
-            setTimeout(() => {
-                socket.emit('command', {command: 'open https://www.youtube.com/watch?v=3D8O3bfOEZs&list=RD3D8O3bfOEZs&start_radio=1&t=2830s'});
-            }, 4000);
         }
 
         let isMuted = false;

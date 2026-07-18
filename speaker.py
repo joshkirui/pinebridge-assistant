@@ -156,7 +156,7 @@ class Speaker:
 
     def ready(self):
         mode = f" [AI: {self._backend}]"
-        self.say(f"Hi Lerito, welcome back! What are we cooking today? {mode}")
+        self.say(f"Hi Lerito, let's cook! {mode}")
 
     def shutting_down(self):
         self.say("Shutting down. Goodbye!")

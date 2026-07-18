@@ -97,6 +97,7 @@ class Processor:
 
     def _offline_process(self, text):
         patterns = [
+            (r"work mode", lambda t: ("general", "chat", {"text": "Hi Lerito, let's cook!"})),
             # Web patterns first (before general open)
             (r"open (.+) in (?:the )?browser", self._handle_open_in_browser),
             (r"open (.+) in chrome", self._handle_open_in_browser),

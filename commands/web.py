@@ -15,7 +15,7 @@ def open_url(url):
             subprocess.Popen([CHROME_PATH, url])
         else:
             webbrowser.open(url)
-        return True, f"Opening {url}."
+        return True, "Done."
     except Exception as e:
         return False, f"Failed to open URL: {e}"
 
