@@ -6,41 +6,64 @@ from config import (
     AI_BACKEND,
 )
 
+OLLAMA_BASE_URL = "http://127.0.0.1:11434/v1"
+OLLAMA_MODEL = "llama3.2"
+
 
 class Processor:
     def __init__(self):
         self._client = None
         self._model = None
+        self._fallback_client = None
+        self._fallback_model = None
         self._ai_disabled = False
         self._init_ai()
 
     def _init_ai(self):
         backend = AI_BACKEND.lower()
 
-        if backend == "deepseek" and DEEPSEEK_API_KEY:
+        # Try Ollama first (free, local)
+        try:
+            import openai
+            test_client = openai.OpenAI(
+                api_key="ollama",
+                base_url=OLLAMA_BASE_URL,
+            )
+            test_client.models.list()
+            self._client = test_client
+            self._model = OLLAMA_MODEL
+            print(f"\033[92m[AI]\033[0m Ollama connected ({OLLAMA_MODEL})")
+        except Exception as e:
+            print(f"\033[93m[AI]\033[0m Ollama not available: {e}")
+
+        # DeepSeek as fallback
+        if DEEPSEEK_API_KEY:
             try:
                 import openai
-                self._client = openai.OpenAI(
+                self._fallback_client = openai.OpenAI(
                     api_key=DEEPSEEK_API_KEY,
                     base_url=DEEPSEEK_BASE_URL,
                 )
-                self._model = DEEPSEEK_MODEL
-                print(f"\033[92m[AI]\033[0m DeepSeek connected ({DEEPSEEK_MODEL})")
-                return
+                self._fallback_model = DEEPSEEK_MODEL
+                if not self._client:
+                    self._client = self._fallback_client
+                    self._model = self._fallback_model
+                print(f"\033[92m[AI]\033[0m DeepSeek fallback ready ({DEEPSEEK_MODEL})")
             except Exception as e:
                 print(f"\033[91m[AI]\033[0m DeepSeek init failed: {e}")
 
-        if backend == "openai" and OPENAI_API_KEY:
+        # OpenAI as last resort
+        if OPENAI_API_KEY and not self._client:
             try:
                 import openai
                 self._client = openai.OpenAI(api_key=OPENAI_API_KEY)
                 self._model = OPENAI_MODEL
                 print(f"\033[92m[AI]\033[0m OpenAI connected ({OPENAI_MODEL})")
-                return
             except Exception as e:
                 print(f"\033[91m[AI]\033[0m OpenAI init failed: {e}")
 
-        print(f"\033[93m[AI]\033[0m No AI backend available - offline mode only")
+        if not self._client:
+            print(f"\033[93m[AI]\033[0m No AI backend available - offline mode only")
 
     def process(self, text):
         text = text.lower().strip()
@@ -48,7 +71,7 @@ class Processor:
             return None
 
         # Skip if it's just the wake word or too short
-        if len(text.split()) < 2 and text not in ["hello", "hi", "hey", "bye", "yes", "no", "thanks", "yo", "screenshot", "mute", "unmute", "lock", "sleep", "restart", "reboot", "pause", "play"]:
+        if len(text.split()) < 2 and text not in ["hello", "hi", "hey", "bye", "yes", "no", "thanks", "yo", "screenshot", "mute", "unmute", "lock", "sleep", "restart", "reboot", "pause", "play", "shutdown"]:
             if text in ["open", "close", "start", "launch"]:
                 return ("general", "chat", {"text": "What would you like me to open?"})
             return ("general", "chat", {"text": "Yes? How can I help?"})
@@ -88,10 +111,14 @@ class Processor:
             (r"open (.+)", self._handle_open),
             (r"launch (.+)", self._handle_open),
             (r"start (.+)", self._handle_open),
+            (r"close all", lambda t: ("system", "close_all", {})),
+            (r"quit all", lambda t: ("system", "close_all", {})),
             (r"close (.+)", self._handle_close),
             (r"quit (.+)", self._handle_close),
             (r"kill (.+)", self._handle_close),
             (r"shut\s*down", lambda t: ("system", "shutdown", {})),
+            (r"close all", lambda t: ("system", "close_all", {})),
+            (r"quit all", lambda t: ("system", "close_all", {})),
             (r"restart", lambda t: ("system", "restart", {})),
             (r"reboot", lambda t: ("system", "restart", {})),
             (r"lock", lambda t: ("system", "lock", {})),
@@ -156,7 +183,7 @@ class Processor:
         return None
 
     def _ai_process(self, text):
-        system_prompt = """You are Pine Bridge, a Windows voice assistant. Parse the user's command and return a JSON object with:
+        system_prompt = """You are Laura, a Windows voice assistant. Parse the user's command and return a JSON object with:
 - "module": one of "apps", "system", "web", "files", "media", "general"
 - "action": the function to call
 - "params": dict of parameters
@@ -173,34 +200,44 @@ Return ONLY valid JSON. No explanation. Example: {"module": "apps", "action": "o
 If the command is a greeting or chat, return: {"module": "general", "action": "chat", "params": {"text": "your friendly response here"}}
 """
 
-        try:
-            response = self._client.chat.completions.create(
-                model=self._model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": text}
-                ],
-                temperature=0.1,
-                max_tokens=300
-            )
-            content = response.choices[0].message.content.strip()
-            content = content.replace("```json", "").replace("```", "").strip()
-            data = json.loads(content)
-            module = data.get("module")
-            action = data.get("action")
-            params = data.get("params", {})
-            if module and action:
-                return (module, action, params)
-        except json.JSONDecodeError:
-            pass
-        except Exception as e:
-            err_str = str(e)
-            if "402" in err_str or "insufficient" in err_str.lower():
-                print(f"\033[93m[AI]\033[0m API balance depleted - switching to offline mode")
-                self._ai_disabled = True
-                self._client = None
-            else:
-                print(f"\033[91m[AI Error]\033[0m {e}")
+        # Try primary client, then fallback
+        clients = [(self._client, self._model)]
+        if self._fallback_client and self._fallback_client is not self._client:
+            clients.append((self._fallback_client, self._fallback_model))
+
+        for client, model in clients:
+            if not client:
+                continue
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": text}
+                    ],
+                    temperature=0.1,
+                    max_tokens=300
+                )
+                content = response.choices[0].message.content.strip()
+                content = content.replace("```json", "").replace("```", "").strip()
+                data = json.loads(content)
+                module = data.get("module")
+                action = data.get("action")
+                params = data.get("params", {})
+                if module and action:
+                    return (module, action, params)
+            except json.JSONDecodeError:
+                continue
+            except Exception as e:
+                err_str = str(e)
+                if "402" in err_str or "insufficient" in err_str.lower():
+                    print(f"\033[93m[AI]\033[0m API balance depleted")
+                    if client is self._client:
+                        self._client = self._fallback_client
+                        self._model = self._fallback_model
+                else:
+                    print(f"\033[91m[AI Error]\033[0m {e}")
+                continue
 
         return None
 

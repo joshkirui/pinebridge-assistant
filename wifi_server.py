@@ -368,21 +368,50 @@ def handle_connect():
 def handle_disconnect():
     print(f"\033[93m[WiFi]\033[0m Phone disconnected")
 
+_debounce_timers = {}
+_DEBOUNCE_CMDS = {"volume up", "volume down", "mute", "unmute", "next track", "previous track", "pause", "play"}
+_DEBOUNCE_DELAY = 0.4  # seconds
+_debounce_pending = []
+
 @socketio.on('command')
 def handle_command(data):
     command = data.get('command', '').lower().strip()
     print(f"\033[90m[Phone Command]\033[0m {command}")
-    
+
+    # Debounce rapid-fire commands: execute all, but only speak the last one
+    if command in _DEBOUNCE_CMDS:
+        _debounce_pending.append(command)
+        if command in _debounce_timers:
+            _debounce_timers[command].cancel()
+        timer = threading.Timer(_DEBOUNCE_DELAY, _flush_debounced, args=[command])
+        _debounce_timers[command] = timer
+        timer.start()
+        return
+
+    _execute_command(command, speak=True)
+
+def _flush_debounced(last_command):
+    # Execute all queued commands silently, then speak only the last result
+    pending = list(_debounce_pending)
+    _debounce_pending.clear()
+    for cmd in pending[:-1]:
+        _execute_command(cmd, speak=False)
+    if pending:
+        _execute_command(pending[-1], speak=True)
+
+def _execute_command(command, speak=True):
     result = processor.process(command)
     if result is None:
-        msg = "I'm not sure how to do that."
-        speaker.say(msg, block=False)
-        socketio.emit('response', {'message': msg, 'success': False})
+        if speak:
+            msg = "I'm not sure how to do that."
+            speaker.say(msg, block=False)
+            socketio.emit('response', {'message': msg, 'success': False})
         return
-    
+
     module, action, params = result
     success, message = executor.execute((module, action, params))
-    speaker.say(message, block=False)
+    if speak:
+        speaker.say(message, block=False)
     socketio.emit('response', {'message': message, 'success': success})
 
 @socketio.on('voice')

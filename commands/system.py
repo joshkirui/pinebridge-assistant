@@ -137,3 +137,27 @@ def take_screenshot():
         return True, f"Screenshot saved to {filename} on your Desktop."
     except Exception as e:
         return False, f"Failed to take screenshot: {e}"
+
+
+def close_all():
+    apps_to_close = [
+        "chrome.exe", "msedge.exe", "firefox.exe",
+        "Spotify.exe", "vlc.exe", "Discord.exe",
+        "Teams.exe", "Zoom.exe", "slack.exe",
+        "WINWORD.EXE", "EXCEL.EXE", "POWERPNT.EXE",
+        "Code.exe", "Cursor.exe",
+    ]
+    closed = []
+    for app in apps_to_close:
+        try:
+            result = subprocess.run(
+                ["taskkill", "/IM", app, "/F"],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                closed.append(app.replace(".exe", ""))
+        except Exception:
+            pass
+    if closed:
+        return True, f"Closed {len(closed)} apps: {', '.join(closed)}."
+    return True, "No matching apps were running."

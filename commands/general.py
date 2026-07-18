@@ -1,11 +1,49 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import math
 import subprocess
 
 
+def _get_forex_sessions():
+    now_utc = datetime.now(timezone.utc)
+    h = now_utc.hour
+
+    sessions = []
+    # Sydney: 9 PM - 6 AM UTC
+    if h >= 21 or h < 6:
+        sessions.append("Sydney")
+    # Tokyo: 12 AM - 9 AM UTC
+    if 0 <= h < 9:
+        sessions.append("Tokyo")
+    # London: 7 AM - 4 PM UTC
+    if 7 <= h < 16:
+        sessions.append("London")
+    # New York: 12 PM - 9 PM UTC
+    if 12 <= h < 21:
+        sessions.append("New York")
+
+    # Determine market status
+    if h in range(21, 24) or h in range(0, 6):
+        status = "Asian session"
+    elif h in range(7, 12):
+        status = "London session"
+    elif h in range(12, 16):
+        status = "London-New York overlap - most volatile"
+    elif h in range(16, 21):
+        status = "New York session"
+    else:
+        status = "Market transitioning"
+
+    return sessions, status
+
+
 def get_time():
     now = datetime.now()
-    return True, f"It's {now.strftime('%I:%M %p')}."
+    sessions, status = _get_forex_sessions()
+    time_str = now.strftime('%I:%M %p')
+    if sessions:
+        session_list = " and ".join(sessions)
+        return True, f"It's {time_str}. {status}. {session_list} markets are open."
+    return True, f"It's {time_str}."
 
 
 def get_date():
