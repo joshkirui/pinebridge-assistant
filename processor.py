@@ -97,7 +97,7 @@ class Processor:
 
     def _offline_process(self, text):
         patterns = [
-            (r"work mode", lambda t: ("general", "chat", {"text": "Hi Lerito, let's cook!"})),
+            (r"work mode", lambda t: ("general", "work_mode", {})),
             # Web patterns first (before general open)
             (r"open (.+) in (?:the )?browser", self._handle_open_in_browser),
             (r"open (.+) in chrome", self._handle_open_in_browser),
@@ -114,6 +114,7 @@ class Processor:
             (r"open gmail", lambda t: ("web", "open_gmail", {})),
             (r"open email", lambda t: ("web", "open_gmail", {})),
             (r"open mail", lambda t: ("web", "open_gmail", {})),
+            (r"open (https?://.+)", self._handle_open_url),
             (r"go to (.+)", self._handle_goto),
             # App patterns
             (r"open (.+)", self._handle_open),
@@ -286,6 +287,10 @@ If the command is a greeting or chat, return: {"module": "general", "action": "c
     def _handle_youtube(self, match):
         query = match.group(1).strip() if hasattr(match, 'group') and match.groups() else text_after(match, ["youtube"])
         return ("web", "open_youtube", {"query": query})
+
+    def _handle_open_url(self, match):
+        url = match.group(1).strip()
+        return ("web", "open_url", {"url": url})
 
     def _handle_goto(self, match):
         name = match.group(1).strip() if hasattr(match, 'group') and match.groups() else text_after(match, ["go to"])

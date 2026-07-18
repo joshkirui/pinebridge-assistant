@@ -1,6 +1,10 @@
 from datetime import datetime, timezone, timedelta
 import math
 import subprocess
+import os
+import time
+
+WORK_MODE_FILE = r"C:\Users\joshk\Music\8 HOUR R&B MIX 2025 _ SZA Summer Walker Leon Thomas + _ Modern & Throwbacks _ R&B Playlist.m4a"
 
 
 def _get_forex_sessions():
@@ -116,3 +120,34 @@ def open_explorer(path=None):
         return True, "Opened File Explorer."
     except Exception as e:
         return False, f"Failed to open File Explorer: {e}"
+
+
+def work_mode():
+    try:
+        ps_script = f'''
+Start-Process "{WORK_MODE_FILE}"
+Start-Sleep -Seconds 3
+
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class MoveWindow {{
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+}}
+"@
+
+$hwnd = [MoveWindow]::GetForegroundWindow()
+if ($hwnd -ne [IntPtr]::Zero) {{
+    [MoveWindow]::SetWindowPos($hwnd, [IntPtr]::Zero, 1920, 100, 1280, 720, 0x0040)
+}}
+'''
+        subprocess.Popen(
+            ["powershell", "-Command", ps_script],
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        return True, "Hi Lerito, let's cook!"
+    except Exception as e:
+        return False, f"Work mode failed: {e}"

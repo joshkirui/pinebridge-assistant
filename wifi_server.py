@@ -326,8 +326,11 @@ HTML_TEMPLATE = """
             addLog('Work Mode activated', 'user');
             socket.emit('command', {command: 'work mode'});
             setTimeout(() => {
-                socket.emit('command', {command: 'open https://www.youtube.com/watch?v=3D8O3bfOEZs&list=RD3D8O3bfOEZs&start_radio=1&t=4031s'});
-            }, 2000);
+                socket.emit('command', {command: 'what time is it'});
+            }, 1500);
+            setTimeout(() => {
+                socket.emit('command', {command: 'open tradingview'});
+            }, 3500);
         }
 
         let isMuted = false;
