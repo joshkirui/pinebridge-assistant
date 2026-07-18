@@ -161,3 +161,8 @@ def close_all():
     if closed:
         return True, f"Closed {len(closed)} apps: {', '.join(closed)}."
     return True, "No matching apps were running."
+
+
+def close_all_and_shutdown():
+    close_all()
+    return shutdown()

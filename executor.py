@@ -2,7 +2,7 @@ from commands.apps import open_app, close_app, list_installed_apps
 from commands.system import (
     shutdown, restart, cancel_shutdown, lock_screen,
     sleep_computer, hibernate, get_volume, set_volume,
-    volume_up, volume_down, mute, unmute, take_screenshot
+    volume_up, volume_down, mute, unmute, take_screenshot, close_all, close_all_and_shutdown
 )
 from commands.web import open_url, search_web, open_youtube, open_gmail, open_website, open_google_maps
 from commands.files import open_file, list_files, create_folder, create_file, delete_file, search_files
@@ -33,6 +33,8 @@ MODULE_MAP = {
         "mute": lambda **kwargs: mute(),
         "unmute": lambda **kwargs: unmute(),
         "screenshot": lambda **kwargs: take_screenshot(),
+        "close_all": lambda **kwargs: close_all(),
+        "close_all_and_shutdown": lambda **kwargs: close_all_and_shutdown(),
     },
     "web": {
         "open_url": lambda url="", **kwargs: open_url(url),
