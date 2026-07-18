@@ -332,8 +332,14 @@ HTML_TEMPLATE = """
                 socket.emit('command', {command: 'open tradingview'});
             }, 3500);
             setTimeout(() => {
+                socket.emit('command', {command: 'open discord'});
+            }, 4500);
+            setTimeout(() => {
+                socket.emit('command', {command: 'open unigram'});
+            }, 5000);
+            setTimeout(() => {
                 socket.emit('command', {command: 'work mode music'});
-            }, 5500);
+            }, 6000);
         }
 
         let isMuted = false;

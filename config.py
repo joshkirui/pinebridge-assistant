@@ -100,6 +100,7 @@ KNOWN_APPS = {
     "whatsapp web": "https://web.whatsapp.com",
     "telegram": "https://web.telegram.org",
     "telegram web": "https://web.telegram.org",
+    "unigram": r"shell:AppsFolder\38833FF26BA1D.UnigramPreview_g9c9v27vpyspw!App",
     "snapchat": "https://web.snapchat.com",
     "instagram": "https://www.instagram.com",
     "facebook": "https://www.facebook.com",
