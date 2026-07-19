@@ -214,6 +214,67 @@ HTML_TEMPLATE = """
         .media-btn.play-btn:active { transform: scale(0.9); }
         .media-btn.small { width: 50px; height: 50px; }
         .media-btn.small svg { width: 24px; height: 24px; }
+        /* Navigation d-pad */
+        .nav-section {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 10px;
+        }
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 56px);
+            grid-template-rows: repeat(3, 56px);
+            gap: 4px;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .dpad-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .dpad-btn:active { background: rgba(0,210,255,0.4); transform: scale(0.92); }
+        .dpad-btn.center {
+            background: rgba(0,210,255,0.25);
+            border-color: rgba(0,210,255,0.5);
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .dpad-btn.empty { background: none; border: none; pointer-events: none; }
+        .click-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .click-btn {
+            width: 100px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .click-btn:active { background: rgba(0,210,255,0.4); transform: scale(0.95); }
+        .scroll-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -252,6 +313,44 @@ HTML_TEMPLATE = """
         <button class="media-btn small" onclick="sendCmd('volume up')">
             <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
         </button>
+    </div>
+    
+    <div class="section-label">Navigation</div>
+    <div class="nav-section">
+        <div class="dpad">
+            <div class="dpad-btn empty"></div>
+            <div class="dpad-btn" onclick="sendCmd('press up')">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M7 14l5-5 5 5z"/></svg>
+            </div>
+            <div class="dpad-btn empty"></div>
+            <div class="dpad-btn" onclick="sendCmd('press left')">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M14 7l-5 5 5 5z"/></svg>
+            </div>
+            <div class="dpad-btn center" onclick="sendCmd('press enter')">OK</div>
+            <div class="dpad-btn" onclick="sendCmd('press right')">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M10 17l5-5-5-5z"/></svg>
+            </div>
+            <div class="dpad-btn empty"></div>
+            <div class="dpad-btn" onclick="sendCmd('press down')">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M7 10l5 5 5-5z"/></svg>
+            </div>
+            <div class="dpad-btn empty"></div>
+        </div>
+        <div class="click-btns">
+            <div class="click-btn" onclick="sendCmd('left click')">Left Click</div>
+            <div class="click-btn" onclick="sendCmd('right click')">Right Click</div>
+            <div class="click-btn" onclick="sendCmd('double click')">Double</div>
+        </div>
+        <div class="scroll-btns">
+            <div class="click-btn" onclick="sendCmd('scroll up')">Scroll Up</div>
+            <div class="click-btn" onclick="sendCmd('scroll down')">Scroll Down</div>
+        </div>
+        <div class="scroll-btns" style="margin-top:6px">
+            <div class="click-btn" onclick="sendCmd('mouse up')" style="width:80px;font-size:12px">Mouse Up</div>
+            <div class="click-btn" onclick="sendCmd('mouse down')" style="width:80px;font-size:12px">Mouse Down</div>
+            <div class="click-btn" onclick="sendCmd('mouse left')" style="width:80px;font-size:12px">Mouse Left</div>
+            <div class="click-btn" onclick="sendCmd('mouse right')" style="width:80px;font-size:12px">Mouse Right</div>
+        </div>
     </div>
     
     <div class="section-label">Quick Commands</div>

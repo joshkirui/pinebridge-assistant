@@ -7,6 +7,15 @@ from commands.system import (
 from commands.web import open_url, search_web, open_youtube, open_gmail, open_website, open_google_maps
 from commands.files import open_file, list_files, create_folder, create_file, delete_file, search_files
 from commands.media import next_track, previous_track, play_pause, increase_brightness, decrease_brightness
+from commands.navigation import (
+    mouse_move_up, mouse_move_down, mouse_move_left, mouse_move_right,
+    mouse_left_click, mouse_right_click, mouse_double_click,
+    scroll_up, scroll_down,
+    key_up, key_down, key_left, key_right,
+    key_enter, key_escape, key_tab, key_space,
+    key_backspace, key_delete, key_home, key_end,
+    key_page_up, key_page_down,
+)
 from commands.general import (
     get_time, get_date, get_day, calculate, get_system_info,
     open_cmd, open_powershell, open_explorer, work_mode_music
@@ -59,6 +68,31 @@ MODULE_MAP = {
         "increase_brightness": lambda **kwargs: increase_brightness(),
         "decrease_brightness": lambda **kwargs: decrease_brightness(),
         "set_brightness": lambda level=50, **kwargs: set_brightness(level),
+    },
+    "navigation": {
+        "mouse_move_up": lambda **kwargs: mouse_move_up(),
+        "mouse_move_down": lambda **kwargs: mouse_move_down(),
+        "mouse_move_left": lambda **kwargs: mouse_move_left(),
+        "mouse_move_right": lambda **kwargs: mouse_move_right(),
+        "mouse_left_click": lambda **kwargs: mouse_left_click(),
+        "mouse_right_click": lambda **kwargs: mouse_right_click(),
+        "mouse_double_click": lambda **kwargs: mouse_double_click(),
+        "scroll_up": lambda **kwargs: scroll_up(),
+        "scroll_down": lambda **kwargs: scroll_down(),
+        "key_up": lambda **kwargs: key_up(),
+        "key_down": lambda **kwargs: key_down(),
+        "key_left": lambda **kwargs: key_left(),
+        "key_right": lambda **kwargs: key_right(),
+        "key_enter": lambda **kwargs: key_enter(),
+        "key_escape": lambda **kwargs: key_escape(),
+        "key_tab": lambda **kwargs: key_tab(),
+        "key_space": lambda **kwargs: key_space(),
+        "key_backspace": lambda **kwargs: key_backspace(),
+        "key_delete": lambda **kwargs: key_delete(),
+        "key_home": lambda **kwargs: key_home(),
+        "key_end": lambda **kwargs: key_end(),
+        "key_page_up": lambda **kwargs: key_page_up(),
+        "key_page_down": lambda **kwargs: key_page_down(),
     },
     "general": {
         "get_time": lambda **kwargs: get_time(),
