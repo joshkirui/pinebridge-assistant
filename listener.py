@@ -167,13 +167,13 @@ class Listener:
     def __init__(self, speaker):
         self.speaker = speaker
         self.recognizer = sr.Recognizer()
-        self.recognizer.energy_threshold = 300
+        self.recognizer.energy_threshold = 4000
         self.recognizer.dynamic_energy_threshold = True
-        self.recognizer.dynamic_energy_adjustment_damping = 0.15
-        self.recognizer.dynamic_energy_ratio = 1.5
-        self.recognizer.pause_threshold = 0.4
+        self.recognizer.dynamic_energy_adjustment_damping = 0.05
+        self.recognizer.dynamic_energy_ratio = 1.2
+        self.recognizer.pause_threshold = 0.3
         self.recognizer.phrase_threshold = 0.1
-        self.recognizer.non_speaking_duration = 0.2
+        self.recognizer.non_speaking_duration = 0.15
         self.microphone = sr.Microphone()
         self.monitor = MicMonitor()
         self.muter = AudioMuter()
@@ -241,6 +241,9 @@ class Listener:
 
         while True:
             try:
+                # Mute background audio before listening for wake word
+                self.muter.mute_all()
+
                 with self.microphone as source:
                     audio = self.recognizer.listen(source, timeout=None, phrase_time_limit=5)
 
@@ -250,10 +253,11 @@ class Listener:
                         print(f"\r\033[90m[Heard]\033[0m {text}          ")
 
                     if not self._matches_wake(text):
+                        # Unmute if no wake word detected
+                        self.muter.unmute_all()
                         continue
 
                     print("\n\033[92m[WAKE DETECTED]\033[0m Listening for command...")
-                    self.muter.mute_all()
 
                     with self.microphone as source:
                         cmd_audio = self.recognizer.listen(source, timeout=30, phrase_time_limit=30)
@@ -274,13 +278,16 @@ class Listener:
                         self.muter.unmute_all()
 
                 except sr.UnknownValueError:
+                    self.muter.unmute_all()
                     pass
                 except sr.RequestError as e:
                     print(f"\r\033[91m[STT Error]\033[0m {e}")
+                    self.muter.unmute_all()
                     time.sleep(1)
 
             except Exception as e:
                 print(f"\033[91m[Error]\033[0m {e}")
+                self.muter.unmute_all()
                 time.sleep(0.5)
 
     def _follow_up_window(self, context):
