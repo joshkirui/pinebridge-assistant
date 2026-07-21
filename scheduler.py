@@ -68,12 +68,13 @@ def start_bot_for_account(account_name):
         return False
 
     try:
-        exe = os.path.join(BOT_DIR, "tradingbot.exe")
-        if not os.path.exists(exe):
-            exe = os.path.join(BOT_DIR, "main.py")
-            cmd = ["py", "-3.11", exe, "--account", account_name]
+        bot_script = os.path.join(BOT_DIR, "frost_bot_live.py")
+        venv_python = os.path.join(BOT_DIR, ".venv", "Scripts", "python.exe")
+        if not os.path.exists(venv_python):
+            venv_python = "py"
+            cmd = [venv_python, "-3.11", bot_script, account_name]
         else:
-            cmd = [exe, "--account", account_name]
+            cmd = [venv_python, bot_script, account_name]
 
         proc = subprocess.Popen(
             cmd,
