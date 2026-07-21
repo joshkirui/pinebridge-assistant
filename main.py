@@ -1,6 +1,7 @@
 import sys
 import signal
 import os
+import threading
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -9,6 +10,7 @@ from speaker import Speaker
 from listener import Listener
 from processor import Processor
 from executor import Executor
+from scheduler import run_scheduler, get_account_list
 
 
 def print_banner():
@@ -33,6 +35,11 @@ def main():
     listener = Listener(speaker)
     processor = Processor()
     executor = Executor()
+
+    # Start scheduler in background
+    scheduler_thread = threading.Thread(target=run_scheduler, args=(speaker,), daemon=True)
+    scheduler_thread.start()
+    print(f"\033[92m[Scheduler]\033[0m Eating schedule thread started")
 
     def signal_handler(sig, frame):
         listener.monitor.stop()

@@ -170,6 +170,13 @@ class Processor:
             (r"what chains", lambda t: ("general", "list_chains", {})),
             (r"suggestions", lambda t: ("general", "get_suggestions", {})),
             (r"what should i do", lambda t: ("general", "get_suggestions", {})),
+            # Bot control
+            (r"list accounts", lambda t: ("general", "list_accounts", {})),
+            (r"show accounts", lambda t: ("general", "list_accounts", {})),
+            (r"start bot", lambda t: ("general", "start_bot", {})),
+            (r"start trading bot", lambda t: ("general", "start_bot", {})),
+            (r"bot status", lambda t: ("general", "bot_status", {})),
+            (r"trading bot status", lambda t: ("general", "bot_status", {})),
             # Web patterns first (before general open)
             (r"open (.+) in (?:the )?browser", self._handle_open_in_browser),
             (r"open (.+) in chrome", self._handle_open_in_browser),

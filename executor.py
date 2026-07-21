@@ -110,6 +110,9 @@ MODULE_MAP = {
         "get_suggestions": lambda **kwargs: _handle_suggestions(),
         "list_chains": lambda **kwargs: _handle_list_chains(),
         "run_chain": lambda chain_name="", **kwargs: _handle_run_chain(chain_name),
+        "list_accounts": lambda **kwargs: _handle_list_accounts(),
+        "start_bot": lambda **kwargs: _handle_start_bot(),
+        "bot_status": lambda **kwargs: _handle_bot_status(),
     },
 }
 
@@ -173,3 +176,40 @@ def _handle_run_chain(chain_name):
         speak_fn=_executor_instance._speak_fn or (lambda *a: None),
     )
     return success, msg
+
+
+def _handle_list_accounts():
+    from scheduler import get_account_list
+    accounts = get_account_list()
+    if accounts:
+        items = [f"  {i}. {name}" for i, name in enumerate(accounts, 1)]
+        return True, "Trading accounts:\n" + "\n".join(items)
+    return True, "No trading accounts found."
+
+
+def _handle_start_bot():
+    from scheduler import start_bot_for_account, get_account_list
+    accounts = get_account_list()
+    if not accounts:
+        return False, "No trading accounts found."
+    started = []
+    for acct in accounts:
+        if start_bot_for_account(acct):
+            started.append(acct)
+    if started:
+        return True, f"Bot started for: {', '.join(started)}"
+    return False, "Failed to start bot."
+
+
+def _handle_bot_status():
+    from scheduler import get_bot_status
+    status = get_bot_status()
+    if status:
+        items = []
+        for name, info in status.items():
+            if info.get("running"):
+                items.append(f"  {name}: RUNNING (PID {info.get('pid', '?')})")
+            else:
+                items.append(f"  {name}: STOPPED")
+        return True, "Bot status:\n" + "\n".join(items)
+    return True, "No bots currently running."

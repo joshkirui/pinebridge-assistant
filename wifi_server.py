@@ -18,6 +18,7 @@ from processor import Processor
 from executor import Executor
 from speaker import Speaker
 from memory import log_conversation
+from scheduler import get_account_list, set_selected_accounts, get_bot_status, start_bot_for_account, stop_bot_for_account, load_accounts
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -284,6 +285,50 @@ HTML_TEMPLATE = """
             display: flex;
             gap: 10px;
         }
+        .bot-section {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .bot-accounts {
+            margin-bottom: 15px;
+        }
+        .account-chip {
+            padding: 6px 12px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .account-chip.selected {
+            background: linear-gradient(145deg, #3a7bd5, #00d2ff);
+            border-color: #00d2ff;
+        }
+        .account-chip:active { transform: scale(0.95); }
+        .status-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 20px;
+            border: 2px solid rgba(0,255,136,0.4);
+            background: rgba(0,255,136,0.1);
+            color: #00ff88;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .status-btn:active { background: rgba(0,255,136,0.3); transform: scale(0.97); }
+        .bot-status-wrap { margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -362,6 +407,22 @@ HTML_TEMPLATE = """
     <div class="section-label">Modes</div>
     <div class="quick-cmds">
         <div class="quick-cmd work-mode" onclick="workMode()">Work Mode</div>
+    </div>
+    
+    <div class="section-label">Trading Bot</div>
+    <div class="bot-section">
+        <div class="bot-accounts" id="botAccounts">
+            <p style="color:#888; font-size:12px; margin-bottom:10px;">Select accounts to run:</p>
+            <div id="accountList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+            <button class="send-btn" style="margin-top:10px; font-size:13px; padding:10px;" onclick="startSelectedBots()">Start Selected</button>
+        </div>
+        <div class="bot-status-wrap">
+            <button class="status-btn" id="botStatusBtn" onclick="checkBotStatus()">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                Bot Status
+            </button>
+            <div id="botStatusResult" style="margin-top:10px; font-size:12px; color:#888;"></div>
+        </div>
     </div>
     
     <div class="commands">
@@ -529,6 +590,59 @@ HTML_TEMPLATE = """
                 };
             }
         }
+
+        // Bot account selection
+        let selectedAccounts = [];
+        function loadAccounts() {
+            socket.emit('get_accounts');
+        }
+        socket.on('accounts_list', (data) => {
+            const list = document.getElementById('accountList');
+            list.innerHTML = '';
+            selectedAccounts = [];
+            (data.accounts || []).forEach(name => {
+                const chip = document.createElement('div');
+                chip.className = 'account-chip';
+                chip.textContent = name;
+                chip.onclick = () => {
+                    chip.classList.toggle('selected');
+                    if (chip.classList.contains('selected')) {
+                        selectedAccounts.push(name);
+                    } else {
+                        selectedAccounts = selectedAccounts.filter(a => a !== name);
+                    }
+                };
+                list.appendChild(chip);
+            });
+        });
+        function startSelectedBots() {
+            if (selectedAccounts.length === 0) {
+                addLog('Select at least one account', 'error');
+                return;
+            }
+            socket.emit('start_bots', {accounts: selectedAccounts});
+            addLog('Starting bots: ' + selectedAccounts.join(', '), 'user');
+        }
+        function checkBotStatus() {
+            socket.emit('get_bot_status');
+            document.getElementById('botStatusResult').textContent = 'Checking...';
+        }
+        socket.on('bot_status', (data) => {
+            const el = document.getElementById('botStatusResult');
+            const status = data.status || {};
+            const keys = Object.keys(status);
+            if (keys.length === 0) {
+                el.innerHTML = '<span style="color:#888">No bots running</span>';
+            } else {
+                el.innerHTML = keys.map(k => {
+                    const s = status[k];
+                    const color = s.running ? '#00ff88' : '#ff4444';
+                    const label = s.running ? 'RUNNING' : 'STOPPED';
+                    return '<span style="color:'+color+'; margin-right:10px;">'+k+': '+label+'</span>';
+                }).join('');
+            }
+        });
+        loadAccounts();
     </script>
 </body>
 </html>
@@ -697,6 +811,30 @@ def handle_voice(data):
         msg = "Voice processing failed."
         speaker.say(msg, block=False)
         socketio.emit('response', {'message': msg, 'success': False})
+
+@socketio.on('get_accounts')
+def handle_get_accounts():
+    accounts = get_account_list()
+    socketio.emit('accounts_list', {'accounts': accounts})
+
+@socketio.on('start_bots')
+def handle_start_bots(data):
+    accounts = data.get('accounts', [])
+    if not accounts:
+        return
+    set_selected_accounts(accounts)
+    results = {}
+    for acct in accounts:
+        ok = start_bot_for_account(acct)
+        results[acct] = "started" if ok else "failed"
+    msg = "Bots started: " + ", ".join(f"{k} ({v})" for k, v in results.items())
+    socketio.emit('response', {'message': msg, 'success': True})
+    speaker.say(msg, block=False)
+
+@socketio.on('get_bot_status')
+def handle_get_bot_status():
+    status = get_bot_status()
+    socketio.emit('bot_status', {'status': status})
 
 def run_server(host='0.0.0.0', port=5000):
     ip = get_local_ip()
