@@ -9,6 +9,9 @@ from config import WAKE_WORD, STT_LANGUAGE, MIC_MONITOR_ENABLED
 WAKE_PHRASES = [
     "hey laura",
     "hi laura",
+    "hey lara",
+    "hi lara",
+    "hey laura",
     "hey pine bridge",
     "hey pinebrigde",
     "hey pine brige",
@@ -18,6 +21,15 @@ WAKE_PHRASES = [
     "hey painbridge",
     "hey pine brid",
     "hey pine br",
+    "hey la",
+    "hey lor",
+    "hey ler",
+    "hey lau",
+    "hey lau ra",
+    "hey lora",
+    "hey lorah",
+    "hey lahura",
+    "hey lahrah",
 ]
 
 FOLLOW_UP_TIMEOUT = 5.0
@@ -155,11 +167,13 @@ class Listener:
     def __init__(self, speaker):
         self.speaker = speaker
         self.recognizer = sr.Recognizer()
-        self.recognizer.energy_threshold = 2000
+        self.recognizer.energy_threshold = 300
         self.recognizer.dynamic_energy_threshold = True
-        self.recognizer.pause_threshold = 0.5
-        self.recognizer.phrase_threshold = 0.2
-        self.recognizer.non_speaking_duration = 0.3
+        self.recognizer.dynamic_energy_adjustment_damping = 0.15
+        self.recognizer.dynamic_energy_ratio = 1.5
+        self.recognizer.pause_threshold = 0.4
+        self.recognizer.phrase_threshold = 0.1
+        self.recognizer.non_speaking_duration = 0.2
         self.microphone = sr.Microphone()
         self.monitor = MicMonitor()
         self.muter = AudioMuter()
@@ -184,6 +198,11 @@ class Listener:
             return True
         if "hey" in words and "pine" in words and any(w.startswith("br") for w in words):
             return True
+        # Fuzzy match: "hey" + anything that starts with "l" (laura, lara, etc.)
+        if "hey" in words or "hi" in words:
+            for w in words:
+                if w.startswith("l") and len(w) >= 2:
+                    return True
         return False
 
     def _strip_wake_word(self, text):
