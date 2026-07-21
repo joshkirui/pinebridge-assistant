@@ -104,8 +104,14 @@ class Speaker:
         try:
             audio_iterator = self._elevenlabs_client.text_to_speech.convert(
                 voice_id=self._elevenlabs_voice_id,
-                model_id="eleven_turbo_v2_5",
+                model_id="eleven_flash_v2_5",
                 text=text,
+                voice_settings={
+                    "stability": 0.40,
+                    "similarity_boost": 0.75,
+                    "style": 0.25,
+                    "use_speaker_boost": True,
+                },
             )
             audio_bytes = b"".join(audio_iterator)
 
@@ -155,8 +161,18 @@ class Speaker:
         self.say(msg)
 
     def ready(self):
-        mode = f" [AI: {self._backend}]"
-        self.say(f"Hi Lerito, let's cook! {mode}")
+        from datetime import datetime
+        now = datetime.now()
+        hour = now.hour
+        if hour < 12:
+            period = "morning"
+        elif hour < 17:
+            period = "afternoon"
+        else:
+            period = "evening"
+        time_str = now.strftime("%I:%M %p")
+        date_str = now.strftime("%A, %B %d")
+        self.say(f"Hi sir, good {period}. It's {time_str} on {date_str}. What activities are we doing today?")
 
     def shutting_down(self):
         self.say("Shutting down. Goodbye!")

@@ -11,3 +11,5 @@ certs/
 *.pem
 __pycache__/
 *.pyc
+memory.json
+patterns_db.json

@@ -20,6 +20,9 @@ WAKE_PHRASES = [
     "hey pine br",
 ]
 
+FOLLOW_UP_TIMEOUT = 5.0
+FOLLOW_UP_PHRASE_LIMIT = 8
+
 
 class AudioMuter:
     def __init__(self):
@@ -160,7 +163,9 @@ class Listener:
         self.microphone = sr.Microphone()
         self.monitor = MicMonitor()
         self.muter = AudioMuter()
-        self._ptt_mode = True
+        self._ptt_mode = False
+        self._always_on = True
+        self._follow_up_active = False
         self._calibrate()
 
     def _calibrate(self):
@@ -181,6 +186,17 @@ class Listener:
             return True
         return False
 
+    def _strip_wake_word(self, text):
+        text = text.lower().strip()
+        for phrase in WAKE_PHRASES:
+            if phrase in text:
+                text = text.replace(phrase, "").strip()
+                break
+        words = text.split()
+        if len(words) >= 2 and words[0] in ("hey", "hi") and words[1] in ("laura", "pine", "pain", "bain"):
+            text = " ".join(words[2:]).strip()
+        return text if text else None
+
     def listen_for_wake_word(self):
         try:
             with self.microphone as source:
@@ -199,6 +215,83 @@ class Listener:
         except Exception:
             pass
         return False
+
+    def listen_always_on(self):
+        print("\033[93m[Always-On Mode]\033[0m Listening for 'Hey Laura'...")
+        self.monitor._active = True
+
+        while True:
+            try:
+                with self.microphone as source:
+                    audio = self.recognizer.listen(source, timeout=None, phrase_time_limit=5)
+
+                try:
+                    text = self.recognizer.recognize_google(audio, language=STT_LANGUAGE).lower()
+                    if text.strip():
+                        print(f"\r\033[90m[Heard]\033[0m {text}          ")
+
+                    if not self._matches_wake(text):
+                        continue
+
+                    print("\n\033[92m[WAKE DETECTED]\033[0m Listening for command...")
+                    self.muter.mute_all()
+
+                    with self.microphone as source:
+                        cmd_audio = self.recognizer.listen(source, timeout=30, phrase_time_limit=30)
+
+                    try:
+                        command = self.recognizer.recognize_google(cmd_audio, language=STT_LANGUAGE)
+                        print(f"\033[92m[Command]\033[0m {command}")
+                        self.muter.unmute_all()
+                        self.monitor.clear_line()
+                        return command.lower().strip()
+
+                    except sr.UnknownValueError:
+                        print("\033[93m[Didn't catch that]\033[0m")
+                        self.muter.unmute_all()
+                        self.monitor.clear_line()
+                    except sr.RequestError as e:
+                        print(f"\033[91m[STT Error]\033[0m {e}")
+                        self.muter.unmute_all()
+
+                except sr.UnknownValueError:
+                    pass
+                except sr.RequestError as e:
+                    print(f"\r\033[91m[STT Error]\033[0m {e}")
+                    time.sleep(1)
+
+            except Exception as e:
+                print(f"\033[91m[Error]\033[0m {e}")
+                time.sleep(0.5)
+
+    def _follow_up_window(self, context):
+        print(f"\033[90m[Follow-up] Listening for {FOLLOW_UP_TIMEOUT}s...\033[0m")
+        self._follow_up_active = True
+        start = time.time()
+
+        while time.time() - start < FOLLOW_UP_TIMEOUT:
+            try:
+                with self.microphone as source:
+                    audio = self.recognizer.listen(source, timeout=FOLLOW_UP_TIMEOUT - (time.time() - start), phrase_time_limit=FOLLOW_UP_PHRASE_LIMIT)
+
+                try:
+                    text = self.recognizer.recognize_google(audio, language=STT_LANGUAGE).lower().strip()
+                    if text:
+                        print(f"\033[92m[Follow-up]\033[0m {text}")
+                        self._follow_up_active = False
+                        return text
+                except sr.UnknownValueError:
+                    continue
+                except sr.RequestError:
+                    break
+            except sr.WaitTimeoutError:
+                break
+            except Exception:
+                break
+
+        self._follow_up_active = False
+        print("\033[90m[Follow-up window closed]\033[0m")
+        return None
 
     def listen_for_push_to_talk(self):
         import keyboard

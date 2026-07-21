@@ -20,6 +20,8 @@ from commands.general import (
     get_time, get_date, get_day, calculate, get_system_info,
     open_cmd, open_powershell, open_explorer, work_mode_music
 )
+from memory import get_suggestions as _get_suggestions, get_insights as _get_insights
+from task_chains import execute_chain, list_chains as _list_chains
 
 
 MODULE_MAP = {
@@ -105,11 +107,22 @@ MODULE_MAP = {
         "open_explorer": lambda path=None, **kwargs: open_explorer(path),
         "work_mode_music": lambda **kwargs: work_mode_music(),
         "chat": lambda text="", **kwargs: (True, text),
+        "get_suggestions": lambda **kwargs: _handle_suggestions(),
+        "list_chains": lambda **kwargs: _handle_list_chains(),
+        "run_chain": lambda chain_name="", **kwargs: _handle_run_chain(chain_name),
     },
 }
 
 
 class Executor:
+    def __init__(self):
+        self._emit_fn = None
+        self._speak_fn = None
+
+    def set_emitters(self, emit_fn, speak_fn):
+        self._emit_fn = emit_fn
+        self._speak_fn = speak_fn
+
     def execute(self, command_tuple):
         if command_tuple is None:
             return False, "I didn't understand that command."
@@ -131,3 +144,32 @@ class Executor:
             return False, f"Command error: {e}"
         except Exception as e:
             return False, f"Execution failed: {e}"
+
+
+_executor_instance = Executor()
+
+
+def _handle_suggestions():
+    suggestions = _get_suggestions()
+    if suggestions:
+        return True, "Suggestions: " + "; ".join(suggestions)
+    return True, "No suggestions right now. Keep using me and I'll learn!"
+
+
+def _handle_list_chains():
+    chains = _list_chains()
+    if chains:
+        items = [f"  {name}: {desc}" for name, desc in chains.items()]
+        return True, "Available chains:\n" + "\n".join(items)
+    return True, "No chains available."
+
+
+def _handle_run_chain(chain_name):
+    if not chain_name:
+        return False, "Which chain should I run?"
+    success, msg = execute_chain(
+        chain_name,
+        emit_fn=_executor_instance._emit_fn or (lambda *a: None),
+        speak_fn=_executor_instance._speak_fn or (lambda *a: None),
+    )
+    return success, msg

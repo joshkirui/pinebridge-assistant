@@ -17,6 +17,7 @@ importlib.reload(config)
 from processor import Processor
 from executor import Executor
 from speaker import Speaker
+from memory import log_conversation
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -214,28 +215,62 @@ HTML_TEMPLATE = """
         .media-btn.play-btn:active { transform: scale(0.9); }
         .media-btn.small { width: 50px; height: 50px; }
         .media-btn.small svg { width: 24px; height: 24px; }
-        /* Navigation d-pad */
+        /* Joystick */
         .nav-section {
             width: 100%;
             max-width: 400px;
             margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
         }
-        .dpad {
-            display: grid;
-            grid-template-columns: repeat(3, 56px);
-            grid-template-rows: repeat(3, 56px);
-            gap: 4px;
-            justify-content: center;
-            margin-bottom: 12px;
+        .joystick-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
-        .dpad-btn {
+        .joystick-wrap {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            border: 2px solid rgba(255,255,255,0.15);
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .joystick-knob {
+            position: absolute;
             width: 56px;
             height: 56px;
-            border-radius: 12px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #3a7bd5, #00d2ff);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 20px rgba(0,210,255,0.4);
+            pointer-events: none;
+            transition: box-shadow 0.15s;
+        }
+        .joystick-wrap.active .joystick-knob {
+            box-shadow: 0 4px 30px rgba(0,210,255,0.7);
+        }
+        .joystick-clicks {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .nav-btn {
+            width: 60px;
+            height: 44px;
+            border-radius: 10px;
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
             color: white;
-            font-size: 22px;
+            font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -243,37 +278,11 @@ HTML_TEMPLATE = """
             transition: all 0.15s;
             -webkit-tap-highlight-color: transparent;
         }
-        .dpad-btn:active { background: rgba(0,210,255,0.4); transform: scale(0.92); }
-        .dpad-btn.center {
-            background: rgba(0,210,255,0.25);
-            border-color: rgba(0,210,255,0.5);
-            font-size: 13px;
-            font-weight: bold;
-        }
-        .dpad-btn.empty { background: none; border: none; pointer-events: none; }
-        .click-btns {
+        .nav-btn:active { background: rgba(0,210,255,0.4); transform: scale(0.93); }
+        .nav-btn svg { width: 20px; height: 20px; fill: white; }
+        .scroll-row {
             display: flex;
             gap: 10px;
-            justify-content: center;
-        }
-        .click-btn {
-            width: 100px;
-            height: 44px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.15s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .click-btn:active { background: rgba(0,210,255,0.4); transform: scale(0.95); }
-        .scroll-btns {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 10px;
         }
     </style>
 </head>
@@ -317,39 +326,24 @@ HTML_TEMPLATE = """
     
     <div class="section-label">Navigation</div>
     <div class="nav-section">
-        <div class="dpad">
-            <div class="dpad-btn empty"></div>
-            <div class="dpad-btn" onclick="sendCmd('press up')">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M7 14l5-5 5 5z"/></svg>
+        <div class="joystick-row">
+            <div class="joystick-clicks">
+                <div class="nav-btn" onclick="sendCmd('scroll up')">
+                    <svg viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+                </div>
+                <div class="nav-btn" onclick="sendCmd('left click')">L-Click</div>
+                <div class="nav-btn" onclick="sendCmd('right click')">R-Click</div>
             </div>
-            <div class="dpad-btn empty"></div>
-            <div class="dpad-btn" onclick="sendCmd('press left')">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M14 7l-5 5 5 5z"/></svg>
+            <div class="joystick-wrap" id="joystick">
+                <div class="joystick-knob" id="joystickKnob"></div>
             </div>
-            <div class="dpad-btn center" onclick="sendCmd('press enter')">OK</div>
-            <div class="dpad-btn" onclick="sendCmd('press right')">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M10 17l5-5-5-5z"/></svg>
+            <div class="joystick-clicks">
+                <div class="nav-btn" onclick="sendCmd('scroll down')">
+                    <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="nav-btn" onclick="sendCmd('double click')">D-Click</div>
+                <div class="nav-btn" onclick="sendCmd('press enter')">Enter</div>
             </div>
-            <div class="dpad-btn empty"></div>
-            <div class="dpad-btn" onclick="sendCmd('press down')">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M7 10l5 5 5-5z"/></svg>
-            </div>
-            <div class="dpad-btn empty"></div>
-        </div>
-        <div class="click-btns">
-            <div class="click-btn" onclick="sendCmd('left click')">Left Click</div>
-            <div class="click-btn" onclick="sendCmd('right click')">Right Click</div>
-            <div class="click-btn" onclick="sendCmd('double click')">Double</div>
-        </div>
-        <div class="scroll-btns">
-            <div class="click-btn" onclick="sendCmd('scroll up')">Scroll Up</div>
-            <div class="click-btn" onclick="sendCmd('scroll down')">Scroll Down</div>
-        </div>
-        <div class="scroll-btns" style="margin-top:6px">
-            <div class="click-btn" onclick="sendCmd('mouse up')" style="width:80px;font-size:12px">Mouse Up</div>
-            <div class="click-btn" onclick="sendCmd('mouse down')" style="width:80px;font-size:12px">Mouse Down</div>
-            <div class="click-btn" onclick="sendCmd('mouse left')" style="width:80px;font-size:12px">Mouse Left</div>
-            <div class="click-btn" onclick="sendCmd('mouse right')" style="width:80px;font-size:12px">Mouse Right</div>
         </div>
     </div>
     
@@ -459,6 +453,55 @@ HTML_TEMPLATE = """
         micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
         micBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
 
+        // Joystick
+        const joystick = document.getElementById('joystick');
+        const joystickKnob = document.getElementById('joystickKnob');
+        let joystickActive = false;
+        let joystickCenter = {x: 0, y: 0};
+        const JOYSTICK_RADIUS = 80;
+        const KNOB_RADIUS = 28;
+        const DEAD_ZONE = 10;
+        const MOVE_SCALE = 0.3;
+
+        function joystickStart(cx, cy) {
+            const rect = joystick.getBoundingClientRect();
+            joystickCenter = {x: rect.left + rect.width/2, y: rect.top + rect.height/2};
+            joystickActive = true;
+            joystick.classList.add('active');
+            joystickMove(cx, cy);
+        }
+
+        function joystickMove(cx, cy) {
+            if (!joystickActive) return;
+            let dx = cx - joystickCenter.x;
+            let dy = cy - joystickCenter.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const maxDist = JOYSTICK_RADIUS - KNOB_RADIUS;
+            if (dist > maxDist) {
+                dx = dx / dist * maxDist;
+                dy = dy / dist * maxDist;
+            }
+            joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            if (dist > DEAD_ZONE) {
+                const moveX = Math.round(dx * MOVE_SCALE);
+                const moveY = Math.round(dy * MOVE_SCALE);
+                socket.emit('mouse', {dx: moveX, dy: moveY});
+            }
+        }
+
+        function joystickEnd() {
+            joystickActive = false;
+            joystick.classList.remove('active');
+            joystickKnob.style.transform = 'translate(-50%, -50%)';
+        }
+
+        joystick.addEventListener('mousedown', (e) => { e.preventDefault(); joystickStart(e.clientX, e.clientY); });
+        document.addEventListener('mousemove', (e) => { if (joystickActive) joystickMove(e.clientX, e.clientY); });
+        document.addEventListener('mouseup', () => { if (joystickActive) joystickEnd(); });
+        joystick.addEventListener('touchstart', (e) => { e.preventDefault(); const t = e.touches[0]; joystickStart(t.clientX, t.clientY); }, {passive: false});
+        joystick.addEventListener('touchmove', (e) => { e.preventDefault(); const t = e.touches[0]; joystickMove(t.clientX, t.clientY); }, {passive: false});
+        joystick.addEventListener('touchend', (e) => { e.preventDefault(); joystickEnd(); }, {passive: false});
+
         async function startRecording() {
             micBtn.classList.add('active');
             try {
@@ -505,6 +548,15 @@ def handle_disconnect():
 
 _debounce_timers = {}
 _DEBOUNCE_CMDS = {"volume up", "volume down", "mute", "unmute", "next track", "previous track", "pause", "play"}
+_SILENT_CMDS = {
+    "mouse up", "mouse down", "mouse left", "mouse right",
+    "click", "left click", "right click", "double click",
+    "scroll up", "scroll down",
+    "press up", "press down", "press left", "press right",
+    "press enter", "press escape", "press tab", "press space",
+    "press backspace", "press delete", "press home", "press end",
+    "page up", "page down",
+}
 _DEBOUNCE_DELAY = 0.4  # seconds
 _debounce_pending = []
 
@@ -523,6 +575,11 @@ def handle_command(data):
         timer.start()
         return
 
+    # Navigation commands execute silently - no voice feedback
+    if command in _SILENT_CMDS:
+        _execute_command(command, speak=False)
+        return
+
     _execute_command(command, speak=True)
 
 def _flush_debounced(last_command):
@@ -535,12 +592,17 @@ def _flush_debounced(last_command):
         _execute_command(pending[-1], speak=True)
 
 def _execute_command(command, speak=True):
+    executor.set_emitters(
+        lambda event, data: socketio.emit(event, data),
+        lambda msg, block=False: speaker.say(msg, block=block),
+    )
     result = processor.process(command)
     if result is None:
         if speak:
             msg = "I'm not sure how to do that."
             speaker.say(msg, block=False)
             socketio.emit('response', {'message': msg, 'success': False})
+        log_conversation(command, "I'm not sure how to do that.", False)
         return
 
     module, action, params = result
@@ -548,6 +610,15 @@ def _execute_command(command, speak=True):
     if speak:
         speaker.say(message, block=False)
     socketio.emit('response', {'message': message, 'success': success})
+    log_conversation(command, message, success)
+
+@socketio.on('mouse')
+def handle_mouse(data):
+    import ctypes as _ct
+    dx = int(data.get('dx', 0))
+    dy = int(data.get('dy', 0))
+    if dx != 0 or dy != 0:
+        _ct.windll.user32.mouse_event(0x0001, dx, dy, 0, 0)
 
 @socketio.on('voice')
 def handle_voice(data):
@@ -608,12 +679,14 @@ def handle_voice(data):
             msg = "I'm not sure how to do that."
             speaker.say(msg, block=False)
             socketio.emit('response', {'message': msg, 'success': False})
+            log_conversation(text, msg, False)
             return
 
         module, action, params = result
         success, message = executor.execute((module, action, params))
         speaker.say(message, block=False)
         socketio.emit('response', {'message': message, 'success': success})
+        log_conversation(text, message, success)
 
     except sr.UnknownValueError:
         msg = "I didn't catch that. Could you repeat?"
