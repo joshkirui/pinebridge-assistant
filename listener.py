@@ -241,9 +241,7 @@ class Listener:
 
         while True:
             try:
-                # Mute background audio before listening for wake word
-                self.muter.mute_all()
-
+                # Listen for wake word WITH audio playing (don't mute yet)
                 with self.microphone as source:
                     audio = self.recognizer.listen(source, timeout=None, phrase_time_limit=5)
 
@@ -253,14 +251,14 @@ class Listener:
                         print(f"\r\033[90m[Heard]\033[0m {text}          ")
 
                     if not self._matches_wake(text):
-                        # Unmute if no wake word detected
-                        self.muter.unmute_all()
                         continue
 
+                    # Wake word detected — mute and listen for command
                     print("\n\033[92m[WAKE DETECTED]\033[0m Listening for command...")
+                    self.muter.mute_all()
 
                     with self.microphone as source:
-                        cmd_audio = self.recognizer.listen(source, timeout=30, phrase_time_limit=30)
+                        cmd_audio = self.recognizer.listen(source, timeout=3, phrase_time_limit=10)
 
                     try:
                         command = self.recognizer.recognize_google(cmd_audio, language=STT_LANGUAGE)
@@ -270,7 +268,7 @@ class Listener:
                         return command.lower().strip()
 
                     except sr.UnknownValueError:
-                        print("\033[93m[Didn't catch that]\033[0m")
+                        print("\033[93m[No command - resuming]\033[0m")
                         self.muter.unmute_all()
                         self.monitor.clear_line()
                     except sr.RequestError as e:
@@ -278,11 +276,9 @@ class Listener:
                         self.muter.unmute_all()
 
                 except sr.UnknownValueError:
-                    self.muter.unmute_all()
                     pass
                 except sr.RequestError as e:
                     print(f"\r\033[91m[STT Error]\033[0m {e}")
-                    self.muter.unmute_all()
                     time.sleep(1)
 
             except Exception as e:
