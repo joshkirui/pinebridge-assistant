@@ -415,6 +415,7 @@ HTML_TEMPLATE = """
             <p style="color:#888; font-size:12px; margin-bottom:10px;">Select accounts to run:</p>
             <div id="accountList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
             <button class="send-btn" style="margin-top:10px; font-size:13px; padding:10px;" onclick="startSelectedBots()">Start Selected</button>
+            <button class="send-btn" style="margin-top:6px; font-size:13px; padding:10px; background: linear-gradient(90deg, #ff4444, #ff6b6b);" onclick="stopAllBots()">Stop All Bots</button>
         </div>
         <div class="bot-status-wrap">
             <button class="status-btn" id="botStatusBtn" onclick="checkBotStatus()">
@@ -623,6 +624,10 @@ HTML_TEMPLATE = """
             socket.emit('start_bots', {accounts: selectedAccounts});
             addLog('Starting bots: ' + selectedAccounts.join(', '), 'user');
         }
+        function stopAllBots() {
+            socket.emit('stop_all_bots');
+            addLog('Stopping all bots...', 'user');
+        }
         function checkBotStatus() {
             socket.emit('get_bot_status');
             document.getElementById('botStatusResult').textContent = 'Checking...';
@@ -828,6 +833,17 @@ def handle_start_bots(data):
         ok = start_bot_for_account(acct)
         results[acct] = "started" if ok else "failed"
     msg = "Bots started: " + ", ".join(f"{k} ({v})" for k, v in results.items())
+    socketio.emit('response', {'message': msg, 'success': True})
+    speaker.say(msg, block=False)
+
+@socketio.on('stop_all_bots')
+def handle_stop_all_bots():
+    from scheduler import stop_all_bots
+    stopped = stop_all_bots()
+    if stopped:
+        msg = f"Stopped bots: {', '.join(stopped)}"
+    else:
+        msg = "No bots were running."
     socketio.emit('response', {'message': msg, 'success': True})
     speaker.say(msg, block=False)
 

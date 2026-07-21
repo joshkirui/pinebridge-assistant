@@ -175,6 +175,9 @@ class Processor:
             (r"show accounts", lambda t: ("general", "list_accounts", {})),
             (r"start bot", lambda t: ("general", "start_bot", {})),
             (r"start trading bot", lambda t: ("general", "start_bot", {})),
+            (r"stop bot", lambda t: ("general", "stop_bots", {})),
+            (r"stop all bots", lambda t: ("general", "stop_bots", {})),
+            (r"kill bot", lambda t: ("general", "stop_bots", {})),
             (r"bot status", lambda t: ("general", "bot_status", {})),
             (r"trading bot status", lambda t: ("general", "bot_status", {})),
             # Web patterns first (before general open)

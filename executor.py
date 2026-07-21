@@ -112,6 +112,7 @@ MODULE_MAP = {
         "run_chain": lambda chain_name="", **kwargs: _handle_run_chain(chain_name),
         "list_accounts": lambda **kwargs: _handle_list_accounts(),
         "start_bot": lambda **kwargs: _handle_start_bot(),
+        "stop_bots": lambda **kwargs: _handle_stop_bots(),
         "bot_status": lambda **kwargs: _handle_bot_status(),
     },
 }
@@ -199,6 +200,14 @@ def _handle_start_bot():
     if started:
         return True, f"Bot started for: {', '.join(started)}"
     return False, "Failed to start bot."
+
+
+def _handle_stop_bots():
+    from scheduler import stop_all_bots
+    stopped = stop_all_bots()
+    if stopped:
+        return True, f"Stopped bots: {', '.join(stopped)}"
+    return True, "No bots were running."
 
 
 def _handle_bot_status():

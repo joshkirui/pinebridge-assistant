@@ -90,6 +90,22 @@ def start_bot_for_account(account_name):
         return False
 
 
+def stop_all_bots():
+    stopped = []
+    with _bot_lock:
+        for name, proc in list(_running_bots.items()):
+            if proc.poll() is None:
+                try:
+                    proc.terminate()
+                    stopped.append(name)
+                except:
+                    pass
+            del _running_bots[name]
+    if stopped:
+        print(f"\033[93m[Scheduler]\033[0m Stopped bots: {', '.join(stopped)}")
+    return stopped
+
+
 def stop_bot_for_account(account_name):
     with _bot_lock:
         proc = _running_bots.get(account_name)
