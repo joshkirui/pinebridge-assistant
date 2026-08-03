@@ -114,6 +114,7 @@ MODULE_MAP = {
         "start_bot": lambda **kwargs: _handle_start_bot(),
         "stop_bots": lambda **kwargs: _handle_stop_bots(),
         "bot_status": lambda **kwargs: _handle_bot_status(),
+        "ask_hermes": lambda query="", **kwargs: _handle_ask_hermes(query),
     },
 }
 
@@ -222,3 +223,33 @@ def _handle_bot_status():
                 items.append(f"  {name}: STOPPED")
         return True, "Bot status:\n" + "\n".join(items)
     return True, "No bots currently running."
+
+
+HERMES_VENV = r"C:\Users\joshk\AppData\Local\hermes\hermes-agent\venv\Scripts\python.exe"
+HERMES_CLI = r"C:\Users\joshk\AppData\Local\hermes\hermes-agent\venv\Scripts\hermes.exe"
+
+def _handle_ask_hermes(query):
+    import subprocess
+    if not query:
+        return False, "What should I ask Hermes?"
+    try:
+        result = subprocess.run(
+            [HERMES_CLI, "chat", "--message", query],
+            capture_output=True, text=True, timeout=60,
+            cwd=r"C:\Users\joshk\AppData\Local\hermes\hermes-agent",
+        )
+        output = result.stdout.strip()
+        if output:
+            # Truncate long responses
+            if len(output) > 500:
+                output = output[:500] + "..."
+            return True, output
+        if result.stderr:
+            return False, f"Hermes error: {result.stderr[:200]}"
+        return True, "Hermes returned no response."
+    except subprocess.TimeoutExpired:
+        return False, "Hermes took too long to respond."
+    except FileNotFoundError:
+        return False, "Hermes not found. Run 'hermes setup' first."
+    except Exception as e:
+        return False, f"Hermes error: {str(e)[:200]}"

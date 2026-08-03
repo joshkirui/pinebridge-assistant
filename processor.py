@@ -180,6 +180,9 @@ class Processor:
             (r"kill bot", lambda t: ("general", "stop_bots", {})),
             (r"bot status", lambda t: ("general", "bot_status", {})),
             (r"trading bot status", lambda t: ("general", "bot_status", {})),
+            # Hermes AI
+            (r"ask hermes (.+)", self._handle_ask_hermes),
+            (r"hermes (.+)", self._handle_ask_hermes),
             # Web patterns first (before general open)
             (r"open (.+) in (?:the )?browser", self._handle_open_in_browser),
             (r"open (.+) in chrome", self._handle_open_in_browser),
@@ -588,6 +591,11 @@ If the command is a greeting or chat, return: {{"module": "general", "action": "
         name = match.group(1).strip() if hasattr(match, 'group') and match.groups() else ""
         _context.update(topic="chain")
         return ("general", "run_chain", {"chain_name": name})
+
+    def _handle_ask_hermes(self, match):
+        query = match.group(1).strip() if hasattr(match, 'group') and match.groups() else ""
+        _context.update(topic="hermes")
+        return ("general", "ask_hermes", {"query": query})
 
     def _fast_pattern_match(self, text):
         """Fast lookup in 17k+ generated patterns."""
