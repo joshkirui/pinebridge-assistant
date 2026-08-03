@@ -222,7 +222,7 @@ class Listener:
         return False
 
     def listen_always_on(self):
-        print("\033[93m[Always-On Mode]\033[0m Listening for 'Hey Laura'...")
+        print("\033[93m[Always-On Mode]\033[0m Listening for 'Hey Ace'...")
         self.monitor._active = True
         heartbeat_chars = ["♡", "♥"]
         hb_idx = 0
@@ -231,7 +231,7 @@ class Listener:
             try:
                 hb = heartbeat_chars[hb_idx % 2]
                 hb_idx += 1
-                sys.stdout.write(f"\r  \033[92m{hb}\033[0m Listening for 'Hey Laura'... ")
+                sys.stdout.write(f"\r  \033[92m{hb}\033[0m Listening for 'Hey Ace'... ")
                 sys.stdout.flush()
 
                 with self.microphone as source:
@@ -246,7 +246,7 @@ class Listener:
                         print(f"\r\033[90m[Heard]\033[0m {text}          ")
 
                     if not self._matches_wake(text):
-                        sys.stdout.write(f"\r  \033[92m{hb}\033[0m Listening for 'Hey Laura'... ")
+                        sys.stdout.write(f"\r  \033[92m{hb}\033[0m Listening for 'Hey Ace'... ")
                         sys.stdout.flush()
                         continue
 
