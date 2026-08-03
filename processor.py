@@ -323,9 +323,10 @@ class Processor:
         if any(g in text_clean for g in how_are_you):
             _context.update(topic="smalltalk")
             return ("general", "chat", {"text": random.choice([
-                "I'm doing great! Ready to help. What do you need?",
-                "All systems go! What can I do for you?",
-                "Running smoothly! How can I assist you today?",
+                "Running smooth. What do you need?",
+                "All good. Ready to work.",
+                "Solid. What's next?",
+                "I'm here. What's the move?",
             ])})
 
         # ── Farewells ──
@@ -333,30 +334,39 @@ class Processor:
         if any(f in text_clean for f in farewells):
             _context.update(topic="farewell")
             return ("general", "chat", {"text": random.choice([
-                "Goodbye! Have a great day!",
-                "See you later! I'll be here if you need me.",
-                "Bye! Take care!",
+                "Later sir. I'll be here.",
+                "See you. Hit me up when you need me.",
+                "Done. Standing by.",
+                "Roger that. I'm around.",
             ])})
 
         # ── Thanks ──
         thanks = ["thank you", "thanks", "appreciate", "thx", "ty"]
         if any(t in text_clean for t in thanks):
             return ("general", "chat", {"text": random.choice([
-                "You're welcome!",
-                "Anytime! That's what I'm here for.",
-                "No problem at all!",
-                "Happy to help!",
+                "Always.",
+                "You got it.",
+                "Anytime.",
+                "That's what I'm here for.",
             ])})
 
         # ── Identity ──
         identity = ["who are you", "what are you", "your name", "what's your name", "what is your name"]
         if any(i in text_clean for i in identity):
-            return ("general", "chat", {"text": "I'm Laura, your voice assistant. I can open apps, control your laptop, search the web, and keep you company."})
+            return ("general", "chat", {"text": random.choice([
+                "I'm Laura. Your voice assistant. I control your laptop, run your trading bots, and handle whatever you need.",
+                "Laura. I'm your AI. I open apps, search the web, manage files, and keep your system running.",
+                "Name's Laura. I'm the voice behind your machine. What do you need?",
+            ])})
 
         # ── Capabilities ──
         capabilities = ["what can you do", "what do you do", "help me", "capabilities", "features", "what are your commands"]
         if any(c in text_clean for c in capabilities):
-            return ("general", "chat", {"text": "I can open apps, control volume, search the web, manage files, take screenshots, control media, run task chains, and even move your mouse. Just say what you need!"})
+            return ("general", "chat", {"text": random.choice([
+                "I open apps, control volume, search the web, manage files, take screenshots, move your mouse, run trading bots, and chain tasks together. Just say it.",
+                "Voice control for your entire laptop. Apps, files, media, system commands, trading bots. I handle it all.",
+                "I'm your hands-free operator. Open Chrome, mute audio, screenshot, run work mode, start trading bots. Whatever you need.",
+            ])})
 
         # ── Jokes ──
         joke = ["tell me a joke", "joke", "make me laugh", "be funny", "something funny"]

@@ -247,12 +247,21 @@ class Listener:
     def listen_always_on(self):
         print("\033[93m[Always-On Mode]\033[0m Listening for 'Hey Laura'...")
         self.monitor._active = True
+        heartbeat_chars = ["♡", "♥"]
+        hb_idx = 0
 
         while True:
             try:
-                # Listen for wake word WITH audio playing (don't mute yet)
+                hb = heartbeat_chars[hb_idx % 2]
+                hb_idx += 1
+                sys.stdout.write(f"\r  \033[92m{hb}\033[0m Listening for 'Hey Laura'... ")
+                sys.stdout.flush()
+
                 with self.microphone as source:
                     audio = self.recognizer.listen(source, timeout=None, phrase_time_limit=5)
+
+                sys.stdout.write(f"\r  \033[93m...\033[0m Processing...                  \n")
+                sys.stdout.flush()
 
                 try:
                     text = self.recognizer.recognize_google(audio, language=STT_LANGUAGE).lower()
@@ -260,9 +269,10 @@ class Listener:
                         print(f"\r\033[90m[Heard]\033[0m {text}          ")
 
                     if not self._matches_wake(text):
+                        sys.stdout.write(f"\r  \033[92m{hb}\033[0m Listening for 'Hey Laura'... ")
+                        sys.stdout.flush()
                         continue
 
-                    # Wake word detected — mute and listen for command
                     print("\n\033[92m[WAKE DETECTED]\033[0m Listening for command...")
                     self.muter.mute_all()
 

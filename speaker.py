@@ -107,10 +107,10 @@ class Speaker:
                 model_id="eleven_flash_v2_5",
                 text=text,
                 voice_settings={
-                    "stability": 0.40,
-                    "similarity_boost": 0.75,
-                    "style": 0.25,
-                    "use_speaker_boost": True,
+                    "stability": 0.15,
+                    "similarity_boost": 0.55,
+                    "style": 0.05,
+                    "use_speaker_boost": False,
                 },
             )
             audio_bytes = b"".join(audio_iterator)
@@ -162,17 +162,31 @@ class Speaker:
 
     def ready(self):
         from datetime import datetime
+        import random
         now = datetime.now()
         hour = now.hour
         if hour < 12:
             period = "morning"
+            greetings = [
+                f"Good morning sir. It's {now.strftime('%I:%M %p')} on {now.strftime('%A, %B %d')}. What are we working on today?",
+                f"Morning sir. {now.strftime('%I:%M %p')}, {now.strftime('%A')}. Ready when you are.",
+                f"Hey, good morning. It's {now.strftime('%I:%M')}. Let's get after it.",
+            ]
         elif hour < 17:
             period = "afternoon"
+            greetings = [
+                f"Good afternoon sir. It's {now.strftime('%I:%M %p')}. What's the plan?",
+                f"Afternoon. {now.strftime('%I:%M')}. How can I help?",
+                f"Hey, good afternoon. What are we doing?",
+            ]
         else:
             period = "evening"
-        time_str = now.strftime("%I:%M %p")
-        date_str = now.strftime("%A, %B %d")
-        self.say(f"Hi sir, good {period}. It's {time_str} on {date_str}. What activities are we doing today?")
+            greetings = [
+                f"Good evening sir. It's {now.strftime('%I:%M %p')}. What's on the agenda?",
+                f"Evening. {now.strftime('%I:%M')}. Ready to work.",
+                f"Hey, good evening. What do you need?",
+            ]
+        self.say(random.choice(greetings))
 
     def shutting_down(self):
         self.say("Shutting down. Goodbye!")
