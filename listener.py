@@ -156,12 +156,10 @@ class Listener:
     def __init__(self, speaker):
         self.speaker = speaker
         self.recognizer = sr.Recognizer()
-        self.recognizer.energy_threshold = 200
-        self.recognizer.dynamic_energy_threshold = True
-        self.recognizer.dynamic_energy_adjustment_damping = 0.03
-        self.recognizer.dynamic_energy_ratio = 1.0
-        self.recognizer.pause_threshold = 0.25
-        self.recognizer.phrase_threshold = 0.08
+        self.recognizer.energy_threshold = 150
+        self.recognizer.dynamic_energy_threshold = False
+        self.recognizer.pause_threshold = 0.2
+        self.recognizer.phrase_threshold = 0.05
         self.recognizer.non_speaking_duration = 0.1
         self.microphone = sr.Microphone()
         self.monitor = MicMonitor()
@@ -174,21 +172,31 @@ class Listener:
     def _calibrate(self):
         print("\033[93m[Calibrating microphone...]\033[0m")
         with self.microphone as source:
-            self.recognizer.adjust_for_ambient_noise(source, duration=2)
+            self.recognizer.adjust_for_ambient_noise(source, duration=1)
+        # Force threshold low after calibration
+        if self.recognizer.energy_threshold > 500:
+            self.recognizer.energy_threshold = 500
         print(f"\033[92m[Calibrated. Energy threshold: {self.recognizer.energy_threshold:.0f}]\033[0m")
 
     def _matches_wake(self, text):
         text = text.lower().strip()
+        # Direct match
         for phrase in WAKE_PHRASES:
             if phrase in text:
                 return True
         words = text.split()
+        # Match "hey" or "hi" followed by anything starting with "a"
         if "hey" in words or "hi" in words:
-            for w in words:
-                if w in ("ace", "ase", "ace", "ais"):
+            idx = words.index("hey") if "hey" in words else words.index("hi")
+            if idx + 1 < len(words):
+                next_word = words[idx + 1]
+                if next_word.startswith("a"):
                     return True
-                if w.startswith("a") and len(w) >= 2:
+                if next_word in ("ace", "ase", "ais", "eis", "ays"):
                     return True
+        # Match if "ace" appears anywhere
+        if "ace" in text or "ase" in text:
+            return True
         return False
 
     def _strip_wake_word(self, text):
