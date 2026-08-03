@@ -10,8 +10,8 @@ if os.path.exists(_env_path):
                 _key, _, _val = _line.partition("=")
                 os.environ.setdefault(_key.strip(), _val.strip())
 
-WAKE_WORD = "hey laura"
-ASSISTANT_NAME = "Laura"
+WAKE_WORD = "hey ace"
+ASSISTANT_NAME = "Ace"
 
 STT_ENGINE = "google"
 STT_LANGUAGE = "en-US"

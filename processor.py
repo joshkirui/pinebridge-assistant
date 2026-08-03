@@ -354,9 +354,9 @@ class Processor:
         identity = ["who are you", "what are you", "your name", "what's your name", "what is your name"]
         if any(i in text_clean for i in identity):
             return ("general", "chat", {"text": random.choice([
-                "I'm Laura. Your voice assistant. I control your laptop, run your trading bots, and handle whatever you need.",
-                "Laura. I'm your AI. I open apps, search the web, manage files, and keep your system running.",
-                "Name's Laura. I'm the voice behind your machine. What do you need?",
+                "I'm Ace. Your voice assistant. I control your laptop, run your trading bots, and handle whatever you need.",
+                "Ace. I'm your AI. I open apps, search the web, manage files, and keep your system running.",
+                "Name's Ace. I'm the voice behind your machine. What do you need?",
             ])})
 
         # ── Capabilities ──

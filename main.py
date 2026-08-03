@@ -24,7 +24,7 @@ def print_banner():
 
     print(f"  AI Backend:     {ai_status}")
     print(f"  TTS Voice:      {tts_status}")
-    print(f"  Mode:           \033[92mAlways-On (Say 'Hey Laura')\033[0m")
+    print(f"  Mode:           \033[92mAlways-On (Say 'Hey Ace')\033[0m")
     print(f"  Mic Monitor:    \033[92mActive\033[0m")
     print(f"  Quit:           Ctrl+C")
     print(f"{'='*56}\n")

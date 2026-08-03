@@ -188,6 +188,9 @@ class Speaker:
             ]
         self.say(random.choice(greetings))
 
+    def listening(self):
+        print("\033[93m[Always-On Mode]\033[0m Listening for 'Hey Ace'...")
+
     def shutting_down(self):
         self.say("Shutting down. Goodbye!")
         if self._pygame_inited:

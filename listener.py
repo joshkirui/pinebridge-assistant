@@ -7,29 +7,18 @@ import numpy as np
 from config import WAKE_WORD, STT_LANGUAGE, MIC_MONITOR_ENABLED
 
 WAKE_PHRASES = [
-    "hey laura",
-    "hi laura",
-    "hey lara",
-    "hi lara",
-    "hey laura",
-    "hey pine bridge",
-    "hey pinebrigde",
-    "hey pine brige",
-    "hey pain bridge",
-    "hey bain bridge",
-    "hey bainbridge",
-    "hey painbridge",
-    "hey pine brid",
-    "hey pine br",
-    "hey la",
-    "hey lor",
-    "hey ler",
-    "hey lau",
-    "hey lau ra",
-    "hey lora",
-    "hey lorah",
-    "hey lahura",
-    "hey lahrah",
+    "hey ace",
+    "hi ace",
+    "hey ace",
+    "hey space",
+    "hey case",
+    "hey face",
+    "hey lace",
+    "hey pace",
+    "hey race",
+    "hey ace",
+    "hey a",
+    "hey ace",
 ]
 
 FOLLOW_UP_TIMEOUT = 5.0
@@ -194,24 +183,12 @@ class Listener:
             if phrase in text:
                 return True
         words = text.split()
-        if "hey" in words and "pine" in words and "bridge" in words:
-            return True
-        if "hey" in words and "pine" in words and any(w.startswith("br") for w in words):
-            return True
-        # Fuzzy match: "hey" + anything that sounds like "laura"
         if "hey" in words or "hi" in words:
             for w in words:
-                # Match any word starting with "l" that's 2+ chars
-                if w.startswith("l") and len(w) >= 2:
+                if w in ("ace", "ase", "ace", "ais"):
                     return True
-                # Match phonetic variations
-                if w in ("la", "lar", "lor", "lau", "lah", "lay", "ly"):
+                if w.startswith("a") and len(w) >= 2:
                     return True
-        # Match if text contains "laura" or close variants
-        laura_variants = ["laura", "lara", "lorah", "lahra", "layra", "lora"]
-        for v in laura_variants:
-            if v in text:
-                return True
         return False
 
     def _strip_wake_word(self, text):
