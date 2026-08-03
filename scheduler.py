@@ -140,6 +140,12 @@ def set_selected_accounts(accounts):
 def run_scheduler(speaker=None, emit_fn=None):
     last_reminder = 0
     bot_started_windows = set()
+    _launched_window = None
+
+    now = datetime.now()
+    if is_eat_time(now):
+        _launched_window = (now.date(), now.hour)
+        print(f"\033[93m[Scheduler]\033[0m Skipping current window (already active at launch)")
 
     print(f"\033[92m[Scheduler]\033[0m Eating schedule active")
     print(f"  03:00-07:00 | 09:00-13:00 | 16:30-18:00 | 19:00-20:00 | 20:30-23:00")
@@ -152,7 +158,7 @@ def run_scheduler(speaker=None, emit_fn=None):
             window_key = (today, now.hour)
             now_ts = time.time()
 
-            if window_key not in bot_started_windows:
+            if window_key not in bot_started_windows and window_key != _launched_window:
                 accounts_to_run = _selected_accounts or get_account_list()
                 if accounts_to_run:
                     for acct in accounts_to_run:
