@@ -167,13 +167,13 @@ class Listener:
     def __init__(self, speaker):
         self.speaker = speaker
         self.recognizer = sr.Recognizer()
-        self.recognizer.energy_threshold = 4000
+        self.recognizer.energy_threshold = 200
         self.recognizer.dynamic_energy_threshold = True
-        self.recognizer.dynamic_energy_adjustment_damping = 0.05
-        self.recognizer.dynamic_energy_ratio = 1.2
-        self.recognizer.pause_threshold = 0.3
-        self.recognizer.phrase_threshold = 0.1
-        self.recognizer.non_speaking_duration = 0.15
+        self.recognizer.dynamic_energy_adjustment_damping = 0.03
+        self.recognizer.dynamic_energy_ratio = 1.0
+        self.recognizer.pause_threshold = 0.25
+        self.recognizer.phrase_threshold = 0.08
+        self.recognizer.non_speaking_duration = 0.1
         self.microphone = sr.Microphone()
         self.monitor = MicMonitor()
         self.muter = AudioMuter()
@@ -198,11 +198,20 @@ class Listener:
             return True
         if "hey" in words and "pine" in words and any(w.startswith("br") for w in words):
             return True
-        # Fuzzy match: "hey" + anything that starts with "l" (laura, lara, etc.)
+        # Fuzzy match: "hey" + anything that sounds like "laura"
         if "hey" in words or "hi" in words:
             for w in words:
+                # Match any word starting with "l" that's 2+ chars
                 if w.startswith("l") and len(w) >= 2:
                     return True
+                # Match phonetic variations
+                if w in ("la", "lar", "lor", "lau", "lah", "lay", "ly"):
+                    return True
+        # Match if text contains "laura" or close variants
+        laura_variants = ["laura", "lara", "lorah", "lahra", "layra", "lora"]
+        for v in laura_variants:
+            if v in text:
+                return True
         return False
 
     def _strip_wake_word(self, text):
